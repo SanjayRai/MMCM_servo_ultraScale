@@ -11,13 +11,13 @@ add_files -norecurse {
 ../IP/mmcm_ps/mmcm_ps.xci
 ../IP/mmcm_300Mhz_in_Master/mmcm_300Mhz_in_Master.xci
 ../IP/pll_400Mhz_PSCLK/pll_400Mhz_PSCLK.xci
-../src/MMCM_slave_test.v
+../src/MMCM_slave_test.sv
 }
 add_files -fileset constrs_1 {
 ../src/xdc/MMCM_slave_test.xdc
 }
 add_files -fileset sim_1 {
-../src/tb_MMCM_slave_test.v
+../src/tb_MMCM_slave_test.sv
 }
 
 update_compile_order -fileset sources_1
