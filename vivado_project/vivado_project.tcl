@@ -22,7 +22,7 @@ add_files -fileset sim_1 {
 
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
-if (0) {
+if (1) {
 launch_runs synth_1
 wait_on_run synth_1
 open_run synth_1
