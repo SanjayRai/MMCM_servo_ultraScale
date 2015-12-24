@@ -71,10 +71,10 @@ reg signed [31:0]  sync_independent_count_B = 32'd0;
 (* dont_touch = "true" *)wire [3:0] NC_NA;
 (* dont_touch = "true" *)wire [31:0] PS_STEP_SIZE;
 (* dont_touch = "true" *)wire [31:0] SAMPLE_PERIOD;
-reg signed [31:0] i0_PS_COUNT_VAL = 32'd0;
-reg signed [31:0] i1_PS_COUNT_VAL = 32'd0;
-reg signed [31:0] i2_PS_COUNT_VAL = 32'd0;
-reg signed [31:0] ps_counter = 32'd0;
+reg unsigned [31:0] i0_PS_COUNT_VAL = 32'd0;
+reg unsigned [31:0] i1_PS_COUNT_VAL = 32'd0;
+reg unsigned [31:0] i2_PS_COUNT_VAL = 32'd0;
+reg unsigned [31:0] ps_counter = 32'd0;
 reg ps_pulse = 1'b0;
 (* dont_touch = "true" *)reg PS_SEL = 1'b0;
 (* dont_touch = "true" *)reg [2:0] ila_input_C_DBG = 4'd0;
@@ -85,6 +85,9 @@ reg i0_sample_pulse = 1'b0;
 reg i1_sample_pulse = 1'b0;
 reg i2_sample_pulse = 1'b0;
 reg i3_sample_pulse = 1'b0;
+
+reg unsigned [31:0] step_count = 32'd0;
+(*dont_touch = "true" *)reg signed [31:0] DBG_step_count = 32'd0;
 
 integer i;
 
@@ -205,6 +208,7 @@ always @ (posedge clk_156_25_PS) begin
 
 always @ (posedge clk_156_25_PS) begin
     if (ACCUM_reset ) begin
+        step_count <= 32'd0;
         PS_DELTA_mov_ave <= 32'd0; 
         for (i = 0; i < 512; i=i+1) begin
                 PS_DELTA_mov_ave_PIPE[i] <= 32'd0; 
@@ -214,9 +218,29 @@ always @ (posedge clk_156_25_PS) begin
         for (i = 1; i < 512; i=i+1) begin
                 PS_DELTA_mov_ave_PIPE[i] <= PS_DELTA_mov_ave_PIPE[i-1];
         end
-        i0_PS_DELTA_mov_ave <= accum - PS_DELTA_mov_ave_PIPE[256];
-        i1_PS_DELTA_mov_ave <= (i0_PS_DELTA_mov_ave >>> 8); 
+        i0_PS_DELTA_mov_ave <= accum - PS_DELTA_mov_ave_PIPE[64];
+        i1_PS_DELTA_mov_ave <= $signed($signed(i0_PS_DELTA_mov_ave) >>> 6); 
+        if (sample_pulse) begin
+            if (i1_PS_DELTA_mov_ave == 32'd0) begin 
+                step_count <= step_count;
+            end else begin 
+                if (i1_PS_DELTA_mov_ave[31] == 1'b0) begin
+                    if (step_count < 32'd1024)
+                        step_count <= step_count + 1;
+                    else
+                        step_count <= 32'd1024; 
+                end else begin
+                    if (step_count > 0)
+                        step_count <= step_count - 1;
+                    else
+                        step_count <= 32'd0;
+
+                end
+            end
+        end
         PS_DELTA_mov_ave <= i1_PS_DELTA_mov_ave;
+        //DBG_step_count <= (32'd1024 - step_count);
+        DBG_step_count <=  step_count;
     end
 end
 
@@ -224,13 +248,13 @@ end
 assign ila_input_C = {ila_input_C_DBG, master_mmcm_locked, PLL_locked, PS_SEL, MMCM_locked, dbg_PS}; 
 
 MMCM_status_ILA U_MMCM_status_ILA (
-	.clk(clk_156_25_PS),
-	.probe0(sync_independent_count_Y),
-	.probe1(sync_slave_count_Y),
-	.probe2(ila_input_C),
-	.probe3(accum_dbg),
-	.probe4(dbg_SAMPLE_DELTA),
-	.probe5(PS_DELTA_mov_ave)
+    .clk(clk_156_25_PS),
+    .probe0(sync_independent_count_Y),
+    .probe1(sync_slave_count_Y),
+    .probe2(ila_input_C),
+    .probe3(accum_dbg),
+    .probe4(DBG_step_count),
+    .probe5(PS_DELTA_mov_ave)
 );
 
 vio_PS_CTRL U_vio_PS_CTRL (
@@ -248,14 +272,17 @@ always @ (posedge psclk_416M) begin
     else
         ps_counter <= ps_counter +1;
 
-    i0_PS_COUNT_VAL <= PS_STEP_SIZE;
+    i0_PS_COUNT_VAL <= DBG_step_count;
+    //i0_PS_COUNT_VAL <= PS_STEP_SIZE;
     i1_PS_COUNT_VAL <= i0_PS_COUNT_VAL;
     i2_PS_COUNT_VAL <= i1_PS_COUNT_VAL;
 
-    if (ps_counter == i2_PS_COUNT_VAL)
-        ps_pulse <= 1'b1;
-    else
+    if (ps_counter < i2_PS_COUNT_VAL)
         ps_pulse <= 1'b0;
+    else begin
+        ps_counter <= 32'd0;
+        ps_pulse <= 1'b1;
+    end
 
      i0_MMCM_psen_pulse <= (ps_pulse & MMCM_psen);
      MMCM_psen_pulse <= i0_MMCM_psen_pulse;
