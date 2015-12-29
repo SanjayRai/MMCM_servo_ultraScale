@@ -47,3 +47,32 @@ proc run_sim {} {
     add_force {/tb_MMCM_slave_test/U_MMCM_slave_test/ACCUM_reset} -radix hex 0
     run 1 us
 }
+proc run_hw {} {
+open_hw
+connect_hw_server -url mcmicro:3121
+current_hw_target [get_hw_targets */xilinx_tcf/Digilent/210251893419]
+set_property PARAM.FREQUENCY 15000000 [get_hw_targets */xilinx_tcf/Digilent/210251893419]
+open_hw_target
+set_property PROGRAM.FILE {./project_X/project_X.runs/impl_1/MMCM_slave_test.bit} [lindex [get_hw_devices] 0]
+set_property PROBES.FILE {./project_X/project_X.runs/impl_1/debug_nets.ltx} [lindex [get_hw_devices] 0]
+current_hw_device [lindex [get_hw_devices] 0]
+refresh_hw_device [lindex [get_hw_devices] 0]
+display_hw_ila_data [ get_hw_ila_data hw_ila_data_1 -of_objects [get_hw_ilas -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_MMCM_status_ILA"}]]
+set_property PROBES.FILE {./project_X/project_X.runs/impl_1/debug_nets.ltx} [lindex [get_hw_devices] 0]
+set_property PROGRAM.FILE {./project_X/project_X.runs/impl_1/MMCM_slave_test.bit} [lindex [get_hw_devices] 0]
+program_hw_devices [lindex [get_hw_devices] 0]
+refresh_hw_device [lindex [get_hw_devices] 0]
+set_property OUTPUT_VALUE 00000100 [get_hw_probes SAMPLE_PERIOD -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+commit_hw_vio [get_hw_probes {SAMPLE_PERIOD} -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+set_property OUTPUT_VALUE 00001000 [get_hw_probes VIO_PS_STEP_SIZE -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+commit_hw_vio [get_hw_probes {VIO_PS_STEP_SIZE} -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+set_property OUTPUT_VALUE 1 [get_hw_probes MMCM_psen -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+commit_hw_vio [get_hw_probes {MMCM_psen} -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+set_property OUTPUT_VALUE 1 [get_hw_probes ACCUM_reset -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+commit_hw_vio [get_hw_probes {ACCUM_reset} -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+set_property OUTPUT_VALUE 0 [get_hw_probes ACCUM_reset -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+commit_hw_vio [get_hw_probes {ACCUM_reset} -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
+run_hw_ila [get_hw_ilas -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_MMCM_status_ILA"}]
+wait_on_hw_ila [get_hw_ilas -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_MMCM_status_ILA"}]
+display_hw_ila_data [upload_hw_ila_data [get_hw_ilas -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_MMCM_status_ILA"}]]
+}

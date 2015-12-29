@@ -18,10 +18,10 @@ wire clk_156_25_PS;
 wire psclk_416M;
 wire clk_156_25Mhz_MASTER;
 wire master_mmcm_locked;
-
+wire MMCM_locked;
+wire PLL_locked;
+(*dont_touch = "true" *)wire ALL_MMCM_PLL_locked;
 wire[7:0] ila_input_C;
-(*dont_touch = "true" *)wire MMCM_locked;
-(*dont_touch = "true" *)wire PLL_locked;
 (*dont_touch = "true" *)wire MMCM_psdone;
 (*dont_touch = "true" *)wire MMCM_psen;
 (*dont_touch = "true" *)wire MMCM_psincdec;
@@ -37,53 +37,47 @@ reg i0_MMCM_psen_pulse = 1'b0;
 (*dont_touch = "true" *)reg dbg_PS = 1'b0;
 
 reg signed [31:0]  slave_count = 32'd0;
-reg signed [31:0]  sync_slave_count_A = 32'd0;
-reg signed [31:0]  sync_slave_count_B = 32'd0;
-(* dont_touch = "true" *)reg [31:0]  sync_slave_count_Y = 32'd0;
+reg unsigned [31:0]  slave_calc_count = 32'd0;
+reg signed [31:0]  sync_slave_count_sample_A = 32'd0;
+reg signed [31:0]  sync_slave_count_sample_B = 32'd0;
+(* dont_touch = "true" *)reg signed [31:0]  count_diff = 32'd0;
 reg signed [31:0]  i0_VOLTAGE = 32'd0;
 reg signed [31:0]  i0_dbg_SAMPLE_VOLT = 32'd0;
 reg signed [31:0]  i1_dbg_SAMPLE_VOLT = 32'd0;
 reg signed [31:0]  i0_dbg_SAMPLE_DELTA = 32'd0;
-(* dont_touch = "true" *)reg signed [31:0]  dbg_SAMPLE_DELTA = 32'd0;
-(* dont_touch = "true" *)reg signed [31:0]  dbg_DIFF_COUNT = 32'd0;
 (* dont_touch = "true" *)reg signed [31:0]  i1_VOLTAGE = 32'd0;
 (* dont_touch = "true" *)reg signed [31:0]  PS_DELTA = 32'd0;
 (* dont_touch = "true" *)wire signed [31:0]  accum_filter_out;
 reg signed [31:0]  i0_PS_DELTA = 32'd0;
 reg signed [31:0]  i1_PS_DELTA = 32'd0;
 (* dont_touch = "true" *)reg signed [31:0]  accum_dbg = 32'd0;
-reg signed [31:0]  i0_accum_dbg = 32'd0;
-reg signed [31:0]  i1_accum_dbg = 32'd0;
-reg signed [31:0]  diff_count = 32'd0;
 reg signed [31:0]  accum = 32'd0; 
-reg signed [31:0]  independent_count = 32'd0;
-reg signed [31:0]  sampler_count = 32'd0;
-reg signed [31:0]  i0_independent_count = 32'd0;
-reg signed [31:0]  i1_independent_count = 32'd0;
-reg signed [31:0]  i2_independent_count = 32'd0;
-reg signed [31:0]  sync_independent_count_A = 32'd0;
-reg signed [31:0]  sync_independent_count_B = 32'd0;
-(* dont_touch = "true" *)reg signed [31:0]  sync_independent_count_Y = 32'd0;
+reg signed [31:0]  master_count = 32'd0;
+reg signed [31:0]  master_count_sample = 32'd0;
+reg signed [31:0]  slave_count_sample = 32'd0;
+reg unsigned [31:0]  master_sampler_count = 32'd0;
+reg unsigned [31:0]  slave_sampler_count = 32'd0;
+reg signed [31:0]  sync_master_count_sample_A = 32'd0;
+reg signed [31:0]  sync_master_count_sample_B = 32'd0;
+reg signed [31:0]  sync_master_count_sample_C = 32'd0;
+reg signed [31:0]  sync_master_count_sample_D = 32'd0;
+(* dont_touch = "true" *)reg signed [31:0]  sync_master_count_sample_Y = 32'd0;
+reg signed [31:0]  i0_sync_master_count_sample_Y = 32'd0;
+reg signed [31:0]  i1_sync_master_count_sample_Y = 32'd0;
+(* dont_touch = "true" *)reg signed [31:0]  dbg_Y_samp_diff = 32'd0;
 
 (* dont_touch = "true" *)wire [3:0] NC_NA;
-(* dont_touch = "true" *)wire [31:0] VIO_PS_STEP_SIZE;
-(* dont_touch = "true" *)wire [31:0] SAMPLE_PERIOD;
+(* dont_touch = "true" *)wire unsigned [31:0] VIO_PS_STEP_SIZE;
+(* dont_touch = "true" *)wire unsigned [31:0] SAMPLE_PERIOD;
+reg unsigned [31:0] PS_CALC_PERIOD = 32'd0;
 reg unsigned [31:0] i0_PS_COUNT_VAL = 32'd0;
 reg unsigned [31:0] i1_PS_COUNT_VAL = 32'd0;
 reg unsigned [31:0] i2_PS_COUNT_VAL = 32'd0;
 reg unsigned [31:0] ps_counter = 32'd0;
 reg ps_pulse = 1'b0;
-(* dont_touch = "true" *)reg PS_SEL = 1'b0;
-(* dont_touch = "true" *)reg [1:0] ila_input_C_DBG = 4'd0;
-
-reg sample_pulse = 1'b0;
-reg i_sample_pulse = 1'b0;
-reg i0_sample_pulse = 1'b0;
-reg i1_sample_pulse = 1'b0;
-reg i2_sample_pulse = 1'b0;
-reg i3_sample_pulse = 1'b0;
 
 (*dont_touch = "true" *)reg DBG_MMCM_psincdec;
+(*dont_touch = "true" *)reg DBG2_MMCM_psincdec;
 
 reg signed [31:0] step_count = 32'd0;
 (*dont_touch = "true" *)reg signed [31:0] DBG_step_count = 32'd0;
@@ -102,6 +96,18 @@ wire        Offset_en        ;
 wire        hold             ;
 wire [0:0]  don              ;
 (* dont_touch = "true" *)wire [4:0] txpippmstepsize_int;
+(* dont_touch = "true" *)reg dbg_mst_samp = 1'b0;
+(* dont_touch = "true" *)reg dbg_slv_samp = 1'b0;
+
+reg i0_slave_sample = 1'b0;
+reg i1_slave_sample = 1'b0;
+reg i2_slave_sample = 1'b0;
+(* dont_touch = "true" *)reg slave_calc_CE = 1'b0;
+reg i_slave_calc_CE = 1'b0;
+reg i0_slave_calc_CE = 1'b0;
+reg i1_slave_calc_CE = 1'b0;
+
+reg unsigned [7:0] calc_start_count = 8'd0;
 
 wire [6:0]  C = 7'b0         ;
 wire [9:0]  P = 10'b0        ;
@@ -150,140 +156,170 @@ mmcm_ps U_mmcm_ps (
 );
 
 always @ (posedge clk_156_25Mhz_MASTER) begin
-    independent_count <= independent_count + 1;
+    if (ACCUM_reset ) begin
+        master_count <= master_count; 
+    end else begin
+        master_count <= master_count + 1;
+    end
 end
 
 always @ (posedge clk_156_25Mhz_MASTER) begin
     if (ACCUM_reset ) begin
-        sampler_count <= 32'd0;
-    end else if (i_sample_pulse ) begin
-        sampler_count <= 32'd0;
+        master_sampler_count <= 32'd0;
+        dbg_mst_samp <= 1'b0;
+        master_count_sample <= 32'd0;
+    end else if (master_sampler_count == SAMPLE_PERIOD) begin
+        master_count_sample <= master_count;
+        master_sampler_count <= master_sampler_count + 1;
+        dbg_mst_samp <= 1'b1;
+    end else if (master_sampler_count == (SAMPLE_PERIOD+4)) begin
+        master_sampler_count <= 32'd0;
+        dbg_mst_samp <= 1'b0;
     end else begin
-        sampler_count <= sampler_count + 1;
+        master_sampler_count <= master_sampler_count + 1;
     end
-    if (sampler_count == SAMPLE_PERIOD)
-        i_sample_pulse <= 1'b1;
-    else
-        i_sample_pulse <= 1'b0;
 end
 
 always @ (posedge clk_156_25_PS) begin
-    i0_sample_pulse <= i_sample_pulse;
-    i1_sample_pulse <= i0_sample_pulse;
-    i2_sample_pulse <= i1_sample_pulse;
-    i3_sample_pulse <= i2_sample_pulse;
-    sample_pulse <= i3_sample_pulse;
-
-    i0_independent_count <= independent_count;
-    i1_independent_count <= i0_independent_count;
-    i2_independent_count <= i1_independent_count;
-
     if (ACCUM_reset ) begin
-        slave_count <= i2_independent_count;
+        slave_count <= 32'd0;
     end else begin
         slave_count <= slave_count + 1;
+    end
+
+end
+
+always @ (posedge clk_156_25_PS) begin
+    if (ACCUM_reset ) begin
+        calc_start_count <= 32'd0;
+    end else begin
+        if (slave_calc_CE) begin 
+            if (calc_start_count < 8'd10) begin
+                calc_start_count <= calc_start_count + 1;
+            end 
+        end
+    end
+
+end
+
+always @ (posedge clk_156_25_PS) begin
+    if (ACCUM_reset ) begin
+        slave_calc_count <= 32'd0;
+        i_slave_calc_CE <= 1'b0;
+        i0_slave_calc_CE <= 1'b0;
+        i1_slave_calc_CE <= 1'b0;
+    end else begin
+        sync_master_count_sample_A <= master_count_sample;
+        sync_master_count_sample_B <= sync_master_count_sample_A;
+        sync_master_count_sample_C <= sync_master_count_sample_B;
+        sync_master_count_sample_D <= sync_master_count_sample_C;
+        if ((sync_master_count_sample_D == sync_master_count_sample_C) && (sync_master_count_sample_C == sync_master_count_sample_B) && (sync_master_count_sample_D != sync_master_count_sample_A)) begin
+            sync_master_count_sample_Y <= sync_master_count_sample_D;
+            count_diff <= (slave_count - sync_master_count_sample_Y);
+            if (slave_calc_count == PS_CALC_PERIOD) begin 
+                slave_calc_count <= 32'd0;
+                i_slave_calc_CE <= 1'b1;
+            end else begin
+                i_slave_calc_CE <= 1'b0;
+                slave_calc_count <= slave_calc_count + 1;
+            end
+        end
+        i0_slave_calc_CE <= i_slave_calc_CE;
+        i1_slave_calc_CE <= i0_slave_calc_CE;
+        slave_calc_CE <= (i0_slave_calc_CE & !i1_slave_calc_CE); 
+    end
+
+    // __SRAI (DEBUG)
+    i0_sync_master_count_sample_Y <= sync_master_count_sample_Y;
+    i1_sync_master_count_sample_Y <= i0_sync_master_count_sample_Y;
+    if (i1_sync_master_count_sample_Y != i0_sync_master_count_sample_Y) begin
+        dbg_Y_samp_diff = (i0_sync_master_count_sample_Y - i1_sync_master_count_sample_Y);
     end
 end
 
 always @ (posedge clk_156_25_PS) begin
         if (ACCUM_reset ) begin
-            sync_independent_count_A <= 32'd0; 
-            sync_independent_count_B <= 32'd0; 
-            sync_independent_count_Y <= 32'd0; 
-            sync_slave_count_A <= 32'd0; 
-            sync_slave_count_B <= 32'd0; 
-            sync_slave_count_Y <= 32'd0; 
-            i0_VOLTAGE <= 32'd0; 
-            i1_VOLTAGE <= 32'd0; 
+            //PS_CALC_PERIOD <= (SAMPLE_PERIOD <<< 4);
+            PS_CALC_PERIOD <= VIO_PS_STEP_SIZE;
+
+            i0_VOLTAGE <= count_diff; 
+            i1_VOLTAGE <= count_diff; 
             i0_PS_DELTA <= 32'd0; 
             i1_PS_DELTA <= 32'd0; 
             PS_DELTA <= 32'd0; 
             accum <= 32'd0;
-            i0_accum_dbg <=  32'd0;
-            i1_accum_dbg <= 32'd0;
-            diff_count <= 32'd0;
             accum_dbg <= 32'd0;
         end else begin
-            sync_independent_count_A <= independent_count;
-            sync_independent_count_B <= sync_independent_count_A;
-            sync_independent_count_Y <= sync_independent_count_B;
 
-            sync_slave_count_A <= slave_count;
-            sync_slave_count_B <= sync_slave_count_A;
-            sync_slave_count_Y <= sync_slave_count_B;
+            //PS_CALC_PERIOD <= (SAMPLE_PERIOD <<< 4);
+            PS_CALC_PERIOD <= VIO_PS_STEP_SIZE;
 
-            i0_VOLTAGE <= (sync_slave_count_Y - sync_independent_count_Y);
-            i1_VOLTAGE <= i0_VOLTAGE; 
-            i0_PS_DELTA <= (i1_VOLTAGE - i0_VOLTAGE); 
-            i1_PS_DELTA <= i0_PS_DELTA;
-            PS_DELTA <= i1_PS_DELTA; 
-            accum <= accum + PS_DELTA;
-            accum_dbg <= accum; 
-            i0_accum_dbg <= accum_dbg;
-            if (i0_accum_dbg != accum_dbg) begin
-                i1_accum_dbg <= (accum_dbg - i0_accum_dbg);
-                diff_count <= diff_count+1;
+
+            if (slave_calc_CE) begin
+                    i0_VOLTAGE <= count_diff;
+                    i1_VOLTAGE <= i0_VOLTAGE; 
+                if (calc_start_count > 8'd5) begin
+                    i0_PS_DELTA <= (i1_VOLTAGE - i0_VOLTAGE); 
+                    i1_PS_DELTA <= i0_PS_DELTA;
+                    PS_DELTA <= i1_PS_DELTA; 
+                    //accum <= accum + PS_DELTA;
+                    if (PS_DELTA > $signed(32'd0)) begin
+                        accum <= accum + $signed(32'd1);
+                    end else if (PS_DELTA == $signed(32'd0)) begin
+                        accum <= accum;
+                    end else begin
+                        accum <= accum - $signed(32'd1);
+                    end
+                end
             end
-            dbg_SAMPLE_DELTA <= i1_accum_dbg;
-            dbg_DIFF_COUNT <= diff_count;
-            ila_input_C_DBG <= i1_VOLTAGE[15:12];
-            PS_SEL <= accum_dbg[31];
+            accum_dbg <= accum; 
         end
 
  end
 
-filter #(.WIDTH(32), .SIZE(8)) U_filter (
+filter #(.WIDTH(32), .SIZE(3)) U_filter (
     .reset_in(ACCUM_reset),
     .clk(clk_156_25_PS),
+    //.CE(1'b1),
+    .CE(slave_calc_CE),
     .data_in(accum),
     .data_out(accum_filter_out)
 
 );
 
-// always @ (posedge clk_156_25_PS) begin
-//     if (ACCUM_reset) begin
-//         step_count <= 32'd512;
-//         DBG_step_count <= 32'd512;
-//     end else if (sample_pulse) begin
-//         step_count <= (step_count + accum_filter_out);
-//     end
-//     if (step_count > $signed(32'd1024))
-//         DBG_step_count <=  $signed(32'd1024);
-//     else if (step_count < $signed(32'd1))
-//         DBG_step_count <=  $signed(32'd0);
-//     else
-//         DBG_step_count <=  step_count;
-// end
 always @ (posedge clk_156_25_PS) begin
     if (ACCUM_reset) begin 
-        DBG_step_count <= 32'd1024;
+        DBG_step_count <= 32'd512;
         DBG_MMCM_psincdec <= 1'b0; 
+        DBG2_MMCM_psincdec <= 1'b0; 
     end else begin
-        if ($signed(accum_filter_out) >  $signed(32'd1024)) begin
-            DBG_step_count <= 32'd1024;
+        if ($signed(accum_filter_out) >  $signed(32'd8192)) begin
+            DBG_step_count <= 32'd8192;
         end else if ($signed(accum_filter_out) < $signed(32'd0)) begin
             DBG_step_count <= $signed(32'd0);
         end else begin 
-            DBG_step_count <=  32'd1024 + accum_filter_out;
+            DBG_step_count <=  accum_filter_out;
         end
         DBG_MMCM_psincdec <= ~DBG_step_count[31]; 
+        DBG2_MMCM_psincdec <= ~accum_filter_out[31];
     end
 end
 
 
+assign ALL_MMCM_PLL_locked = (master_mmcm_locked & MMCM_locked & PLL_locked);
 
-assign ila_input_C = {ila_input_C_DBG, DBG_MMCM_psincdec, master_mmcm_locked, PLL_locked, PS_SEL, MMCM_locked, dbg_PS}; 
+assign ila_input_C = {2'b0, slave_calc_CE, DBG_MMCM_psincdec, ALL_MMCM_PLL_locked, dbg_mst_samp, DBG2_MMCM_psincdec, dbg_PS}; 
 
 MMCM_status_ILA U_MMCM_status_ILA (
     .clk(clk_156_25_PS),
-    .probe0(sync_independent_count_Y),
-    .probe1(sync_slave_count_Y),
+    .probe0(sync_master_count_sample_Y),
+    .probe1(accum_dbg),
     .probe2(ila_input_C),
-    .probe3(accum_dbg),
-    .probe4(DBG_step_count),
-    .probe5(accum_filter_out)
-    .probe6(i1_VOLTAGE)
-    .probe7(PS_DELTA)
+    .probe3(DBG_step_count),
+    .probe4(accum_filter_out),
+    .probe5(i1_VOLTAGE),
+    .probe6(PS_DELTA),
+    .probe7(dbg_Y_samp_diff)
 );
 
 vio_PS_CTRL U_vio_PS_CTRL (
@@ -333,16 +369,16 @@ end
 
 // __ SRAI (XAPP 1241 PICXO design)
 
-always@(posedge clk_156_25_PS)
-begin
-   if (ACCUM_reset) begin
-        picxo_rst[7:0]     <= 8'b11111111;
-   end
-   else begin
-        picxo_rst[7:0]     <=  {picxo_rst[6:0],ACCUM_reset};
-   end
-end 
-
+//always@(posedge clk_156_25_PS)
+//begin
+//   if (ACCUM_reset) begin
+//        picxo_rst[7:0]     <= 8'b11111111;
+//   end
+//   else begin
+//        picxo_rst[7:0]     <=  {picxo_rst[6:0],ACCUM_reset};
+//   end
+//end 
+//
 //   picxo_vio picxo_vio_i (
 //     .clk            (clk_156_25_PS  ),
 //     .probe_out0     (G1              ),

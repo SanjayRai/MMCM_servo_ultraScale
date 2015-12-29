@@ -12,6 +12,7 @@ wire [31:0] data_out;
 filter #(.WIDTH(32), .SIZE(5)) U_filter (
     .reset_in(reset_in),
     .clk(clk),
+    .CE(1'b1),
     .data_in(data_in),
     .data_out(data_out)
 

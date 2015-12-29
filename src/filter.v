@@ -8,6 +8,7 @@ module filter #(
 
     input reset_in,
     input clk,
+    input CE,
     input signed [(WIDTH-1) :0] data_in,
     output signed [(WIDTH-1) :0] data_out
 
@@ -29,7 +30,7 @@ always @ (posedge clk) begin
         for (i = 0; i < DEPTH; i=i+1) begin
                 mov_ave_PIPE[i] <= 32'd0; 
         end
-    end else begin
+    end else if (CE) begin
         mov_ave_PIPE[0] <= data_in;
         for (i = 1; i < DEPTH; i=i+1) begin
                 mov_ave_PIPE[i] <= mov_ave_PIPE[i-1];
