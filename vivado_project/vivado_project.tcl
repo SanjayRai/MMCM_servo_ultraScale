@@ -6,15 +6,11 @@ create_project project_X project_X -part [DEVICE_TYPE]
 
 
 add_files -norecurse {
-../IP/XAPP589_XAPP1241_picxo_test/XAPP589_XAPP1241_picxo_test.xci
-../IP/picxo_ila/picxo_ila.xci
-../IP/picxo_vio/picxo_vio.xci
 ../IP/MMCM_status_ILA/MMCM_status_ILA.xci
 ../IP/vio_PS_CTRL/vio_PS_CTRL.xci
 ../IP/mmcm_ps/mmcm_ps.xci
 ../IP/mmcm_300Mhz_in_Master/mmcm_300Mhz_in_Master.xci
 ../IP/pll_400Mhz_PSCLK/pll_400Mhz_PSCLK.xci
-../src/filter.v
 ../src/MMCM_slave_test.sv
 }
 add_files -fileset constrs_1 {
