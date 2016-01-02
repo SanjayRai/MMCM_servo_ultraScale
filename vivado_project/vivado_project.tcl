@@ -20,9 +20,9 @@ add_files -fileset sim_1 {
 ../src/tb_MMCM_slave_test.sv
 }
 
+if (1) {
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
-if (1) {
 launch_runs synth_1
 wait_on_run synth_1
 open_run synth_1
@@ -60,8 +60,6 @@ program_hw_devices [lindex [get_hw_devices] 0]
 refresh_hw_device [lindex [get_hw_devices] 0]
 set_property OUTPUT_VALUE 00000100 [get_hw_probes SAMPLE_PERIOD -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
 commit_hw_vio [get_hw_probes {SAMPLE_PERIOD} -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
-set_property OUTPUT_VALUE 00001000 [get_hw_probes VIO_PS_STEP_SIZE -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
-commit_hw_vio [get_hw_probes {VIO_PS_STEP_SIZE} -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
 set_property OUTPUT_VALUE 1 [get_hw_probes MMCM_psen -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
 commit_hw_vio [get_hw_probes {MMCM_psen} -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]
 set_property OUTPUT_VALUE 1 [get_hw_probes ACCUM_reset -of_objects [get_hw_vios -of_objects [get_hw_devices xcku040_0] -filter {CELL_NAME=~"U_vio_PS_CTRL"}]]

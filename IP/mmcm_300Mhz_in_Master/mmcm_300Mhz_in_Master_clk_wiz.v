@@ -55,7 +55,8 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// CLK_OUT1___156.250______0.000______50.0_______91.531_____76.682
+// CLK_OUT1___156.250______0.000______50.0______102.075_____84.520
+// CLK_OUT2___312.500______0.000______50.0_______89.755_____84.520
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
@@ -70,6 +71,7 @@ module mmcm_300Mhz_in_Master_clk_wiz
   input         clk_in_300Mhz_n,
   // Clock out ports
   output        clk_out_156_25Mhz,
+  output        clk_out_312_50Mhz,
   // Status and control signals
   input         reset,
   output        master_mmcm_locked
@@ -95,10 +97,8 @@ module mmcm_300Mhz_in_Master_clk_wiz
   wire        psdone_unused;
   wire        master_mmcm_locked_int;
   wire        clkfbout_mmcm_300Mhz_in_Master;
-  wire        clkfbout_buf_mmcm_300Mhz_in_Master;
   wire        clkfboutb_unused;
     wire clkout0b_unused;
-   wire clkout1_unused;
    wire clkout1b_unused;
    wire clkout2_unused;
    wire clkout2b_unused;
@@ -119,14 +119,18 @@ module mmcm_300Mhz_in_Master_clk_wiz
     .CLKOUT4_CASCADE      ("FALSE"),
     .COMPENSATION         ("AUTO"),
     .STARTUP_WAIT         ("FALSE"),
-    .DIVCLK_DIVIDE        (2),
-    .CLKFBOUT_MULT_F      (9.375),
+    .DIVCLK_DIVIDE        (3),
+    .CLKFBOUT_MULT_F      (12.500),
     .CLKFBOUT_PHASE       (0.000),
     .CLKFBOUT_USE_FINE_PS ("FALSE"),
-    .CLKOUT0_DIVIDE_F     (9.000),
+    .CLKOUT0_DIVIDE_F     (8.000),
     .CLKOUT0_PHASE        (0.000),
     .CLKOUT0_DUTY_CYCLE   (0.500),
     .CLKOUT0_USE_FINE_PS  ("FALSE"),
+    .CLKOUT1_DIVIDE       (4),
+    .CLKOUT1_PHASE        (0.000),
+    .CLKOUT1_DUTY_CYCLE   (0.500),
+    .CLKOUT1_USE_FINE_PS  ("FALSE"),
     .CLKIN1_PERIOD        (3.333))
   mmcme3_adv_inst
     // Output clocks
@@ -135,7 +139,7 @@ module mmcm_300Mhz_in_Master_clk_wiz
     .CLKFBOUTB           (clkfboutb_unused),
     .CLKOUT0             (clk_out_156_25Mhz_mmcm_300Mhz_in_Master),
     .CLKOUT0B            (clkout0b_unused),
-    .CLKOUT1             (clkout1_unused),
+    .CLKOUT1             (clk_out_312_50Mhz_mmcm_300Mhz_in_Master),
     .CLKOUT1B            (clkout1b_unused),
     .CLKOUT2             (clkout2_unused),
     .CLKOUT2B            (clkout2b_unused),
@@ -145,7 +149,7 @@ module mmcm_300Mhz_in_Master_clk_wiz
     .CLKOUT5             (clkout5_unused),
     .CLKOUT6             (clkout6_unused),
      // Input clock control
-    .CLKFBIN             (clkfbout_buf_mmcm_300Mhz_in_Master),
+    .CLKFBIN             (clkfbout_mmcm_300Mhz_in_Master),
     .CLKIN1              (clk_in_300Mhz_mmcm_300Mhz_in_Master),
     .CLKIN2              (1'b0),
      // Tied to always select the primary input clock
@@ -179,16 +183,16 @@ module mmcm_300Mhz_in_Master_clk_wiz
   // Output buffering
   //-----------------------------------
 
-  BUFG clkf_buf
-   (.O (clkfbout_buf_mmcm_300Mhz_in_Master),
-    .I (clkfbout_mmcm_300Mhz_in_Master));
-
 
 
   BUFG clkout1_buf
    (.O   (clk_out_156_25Mhz),
     .I   (clk_out_156_25Mhz_mmcm_300Mhz_in_Master));
 
+
+  BUFG clkout2_buf
+   (.O   (clk_out_312_50Mhz),
+    .I   (clk_out_312_50Mhz_mmcm_300Mhz_in_Master));
 
 
 

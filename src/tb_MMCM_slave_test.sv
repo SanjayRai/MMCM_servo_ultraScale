@@ -8,13 +8,17 @@ wire clk_in_300Mhz_p;
 wire clk_in_300Mhz_n;
 wire clk_in_156_25_mhz_p;
 wire clk_in_156_25_mhz_n;
+wire user_sma_master_sig;
+wire user_sma_slave_sig;
 
 MMCM_slave_test U_MMCM_slave_test (
     .reset_in(reset_in),
     .clk_in_300Mhz_p(clk_in_300Mhz_p),
     .clk_in_300Mhz_n(clk_in_300Mhz_n),
     .clk_in_156_25_mhz_p(clk_in_156_25_mhz_p),
-    .clk_in_156_25_mhz_n(clk_in_156_25_mhz_n)
+    .clk_in_156_25_mhz_n(clk_in_156_25_mhz_n),
+    .user_sma_master_sig(user_sma_master_sig),
+    .user_sma_slave_sig(user_sma_slave_sig)
 
 );
 reg clk_in_300Mhz = 1'b0;

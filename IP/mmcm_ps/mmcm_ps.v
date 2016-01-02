@@ -55,7 +55,8 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// CLK_OUT1___156.250______0.000______50.0_______91.871_____76.682
+// CLK_OUT1___156.250______0.000______50.0_______98.954_____83.183
+// CLK_OUT2___312.500______0.000______50.0_______86.819_____83.183
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
@@ -64,7 +65,7 @@
 
 `timescale 1ps/1ps
 
-(* CORE_GENERATION_INFO = "mmcm_ps,clk_wiz_v5_2_1,{component_name=mmcm_ps,use_phase_alignment=false,use_min_o_jitter=true,use_max_i_jitter=false,use_dyn_phase_shift=true,use_inclk_switchover=false,use_dyn_reconfig=false,enable_axi=0,feedback_source=FDBK_AUTO,PRIMITIVE=MMCM,num_out_clk=1,clkin1_period=6.4,clkin2_period=10.0,use_power_down=false,use_reset=true,use_locked=true,use_inclk_stopped=false,feedback_type=SINGLE,CLOCK_MGR_TYPE=NA,manual_override=true}" *)
+(* CORE_GENERATION_INFO = "mmcm_ps,clk_wiz_v5_2_1,{component_name=mmcm_ps,use_phase_alignment=false,use_min_o_jitter=true,use_max_i_jitter=false,use_dyn_phase_shift=true,use_inclk_switchover=false,use_dyn_reconfig=false,enable_axi=0,feedback_source=FDBK_AUTO,PRIMITIVE=MMCM,num_out_clk=2,clkin1_period=6.4,clkin2_period=10.0,use_power_down=false,use_reset=true,use_locked=true,use_inclk_stopped=false,feedback_type=SINGLE,CLOCK_MGR_TYPE=NA,manual_override=false}" *)
 
 module mmcm_ps 
  (
@@ -72,6 +73,7 @@ module mmcm_ps
   input         clk_in156_25,
   // Clock out ports
   output        clk_out_156_25,
+  output        clk_out_312_50,
   // Dynamic phase shift ports
   input         psclk,
   input         psen,
@@ -88,6 +90,7 @@ module mmcm_ps
   .clk_in156_25(clk_in156_25),
   // Clock out ports  
   .clk_out_156_25(clk_out_156_25),
+  .clk_out_312_50(clk_out_312_50),
   // Dynamic phase shift ports                
   .psclk(psclk),
   .psen(psen),

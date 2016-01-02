@@ -55,7 +55,8 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// CLK_OUT1___156.250______0.000______50.0_______91.871_____76.682
+// CLK_OUT1___156.250______0.000______50.0_______98.954_____83.183
+// CLK_OUT2___312.500______0.000______50.0_______86.819_____83.183
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
@@ -69,6 +70,7 @@ module mmcm_ps_clk_wiz
   input         clk_in156_25,
   // Clock out ports
   output        clk_out_156_25,
+  output        clk_out_312_50,
   // Dynamic phase shift ports
   input         psclk,
   input         psen,
@@ -97,7 +99,6 @@ module mmcm_ps_clk_wiz
   wire        clkfbout_mmcm_ps;
   wire        clkfboutb_unused;
     wire clkout0b_unused;
-   wire clkout1_unused;
    wire clkout1b_unused;
    wire clkout2_unused;
    wire clkout2b_unused;
@@ -119,13 +120,17 @@ module mmcm_ps_clk_wiz
     .COMPENSATION         ("AUTO"),
     .STARTUP_WAIT         ("FALSE"),
     .DIVCLK_DIVIDE        (1),
-    .CLKFBOUT_MULT_F      (9.000),
+    .CLKFBOUT_MULT_F      (8.000),
     .CLKFBOUT_PHASE       (0.000),
     .CLKFBOUT_USE_FINE_PS ("FALSE"),
-    .CLKOUT0_DIVIDE_F     (9.000),
+    .CLKOUT0_DIVIDE_F     (8.000),
     .CLKOUT0_PHASE        (0.000),
     .CLKOUT0_DUTY_CYCLE   (0.500),
     .CLKOUT0_USE_FINE_PS  ("TRUE"),
+    .CLKOUT1_DIVIDE       (4),
+    .CLKOUT1_PHASE        (0.000),
+    .CLKOUT1_DUTY_CYCLE   (0.500),
+    .CLKOUT1_USE_FINE_PS  ("TRUE"),
     .CLKIN1_PERIOD        (6.4))
   mmcme3_adv_inst
     // Output clocks
@@ -134,7 +139,7 @@ module mmcm_ps_clk_wiz
     .CLKFBOUTB           (clkfboutb_unused),
     .CLKOUT0             (clk_out_156_25_mmcm_ps),
     .CLKOUT0B            (clkout0b_unused),
-    .CLKOUT1             (clkout1_unused),
+    .CLKOUT1             (clk_out_312_50_mmcm_ps),
     .CLKOUT1B            (clkout1b_unused),
     .CLKOUT2             (clkout2_unused),
     .CLKOUT2B            (clkout2b_unused),
@@ -184,6 +189,10 @@ module mmcm_ps_clk_wiz
    (.O   (clk_out_156_25),
     .I   (clk_out_156_25_mmcm_ps));
 
+
+  BUFG clkout2_buf
+   (.O   (clk_out_312_50),
+    .I   (clk_out_312_50_mmcm_ps));
 
 
 
