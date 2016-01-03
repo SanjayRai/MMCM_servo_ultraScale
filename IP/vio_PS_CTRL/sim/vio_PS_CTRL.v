@@ -50,13 +50,15 @@ module vio_PS_CTRL (
 clk,
 
 probe_out0,
-probe_out1
+probe_out1,
+probe_out2
 );
 
 input clk;
 
-output reg [2 : 0] probe_out0 = 'h00 ;
+output reg [3 : 0] probe_out0 = 'h0 ;
 output reg [31 : 0] probe_out1 = 'h00001000 ;
+output reg [31 : 0] probe_out2 = 'h00001000 ;
 
 
 endmodule
