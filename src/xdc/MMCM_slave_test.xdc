@@ -4,7 +4,6 @@ set_clock_groups -name TIG_SRAI_1 -asynchronous -group [get_clocks -of_objects [
 set_clock_groups -name TIG_SRAI_2 -asynchronous -group [get_clocks -of_objects [get_pins U_mmcm_300Mhz_in_Master/inst/mmcme3_adv_inst/CLKOUT1]] -group [get_clocks -of_objects [get_pins U_mmcm_ps/inst/mmcme3_adv_inst/CLKOUT0]]
 set_false_path -from [get_pins {U_vio_PS_CTRL/inst/PROBE_OUT_ALL_INST/G_PROBE_OUT[*].*/*]/C}] -to [get_pins i0_MMCM_psen_pulse_reg/D]
 
-
 # Bank  45 VCCO - VCC1V2_FPGA_3A - IO_L12P_T1U_N10_GC_45
 set_property PACKAGE_PIN AK17            [get_ports "clk_in_300Mhz_p"]
 set_property IOSTANDARD  DIFF_SSTL12     [get_ports "clk_in_300Mhz_p"] 

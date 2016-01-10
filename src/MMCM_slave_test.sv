@@ -14,6 +14,14 @@ module MMCM_slave_test (
 
 );
 localparam BIT_DEPTH = 32;
+
+
+localparam PHASE_COUNT = 12; //__SRAI select a Master/Slave Counter bit value.
+// localparam PHASE_COUNT = 8; //__SRAI select a Master/Slave Counter bit value.
+// localparam PHASE_COUNT = 4; //__SRAI select a Master/Slave Counter bit value.
+// localparam PHASE_COUNT = 3; //__SRAI select a Master/Slave Counter bit value.
+// localparam PHASE_COUNT = 2; //__SRAI select a Master/Slave Counter bit value.
+
 wire i_clk_in_156_25_mhz;
 wire clk_in_156_25;
 wire clk_156_25_PS;
@@ -77,6 +85,23 @@ reg unsigned [7:0] calc_start_count = 8'd0;
 (* dont_touch = "true" *)reg wait_for_ps_done = 1'b0;
 (* dont_touch = "true" *)reg DBG_PS_DELTA_CHANGE = 1'b0; 
 
+(*async_reg = "true" *) reg master_count_PC;
+(*async_reg = "true" *) reg sync_master_count_PC;
+reg slave_count_PC;
+reg sync_slave_count_PC;
+reg i_PHASE_correlation;
+reg r0_PHASE_correlation;
+reg r1_PHASE_correlation;
+(*dont_touch = "true" *)reg PHASE_correlation;
+
+reg I_PHASE_correltation_count_reset;
+reg Q_PHASE_correltation_count_reset;
+(*dont_touch = "true" *)reg unsigned [15:0] I_Phase_correlation_count = 16'd0;
+(*dont_touch = "true" *)reg unsigned [15:0] Q_Phase_correlation_count = 16'd0;
+reg unsigned [15:0] I_PHASE_correltation_sum = 16'd0;
+reg unsigned [15:0] Q_PHASE_correltation_sum = 16'd0;
+(*dont_touch = "true" *)reg unsigned [15:0] IQ_phase_sum = 16'd0;
+
 mmcm_300Mhz_in_Master U_mmcm_300Mhz_in_Master (
 .clk_in_300Mhz_p(clk_in_300Mhz_p),
 .clk_in_300Mhz_n(clk_in_300Mhz_n),
@@ -111,6 +136,7 @@ assign user_sma_slave_sig  = slave_count[15];
 //always @ (posedge clk_156_25Mhz_MASTER) begin
 always @ (posedge clk_312_50Mhz_MASTER) begin
     master_count <= master_count + 1;
+    master_count_PC <= master_count[PHASE_COUNT];
 end
 
 always @ (posedge clk_312_50Mhz_MASTER) begin
@@ -132,10 +158,41 @@ end
 
 always @ (posedge clk_312_50_PS) begin
     slave_count <= slave_count + 1;
+    slave_count_PC <= slave_count[PHASE_COUNT];
 
 end
 
-//always @ (posedge clk_156_25_PS) begin
+
+always @ (posedge clk_312_50_PS) begin
+    sync_master_count_PC <= master_count_PC;
+    sync_slave_count_PC <= slave_count_PC;
+    i_PHASE_correlation = (sync_master_count_PC & sync_slave_count_PC);
+    r0_PHASE_correlation <= i_PHASE_correlation;
+    r1_PHASE_correlation <= r0_PHASE_correlation;
+    I_PHASE_correltation_count_reset <= (r0_PHASE_correlation & (~r1_PHASE_correlation));
+    Q_PHASE_correltation_count_reset <= ((~r0_PHASE_correlation) & r1_PHASE_correlation);
+    PHASE_correlation <= r1_PHASE_correlation;
+
+    if (I_PHASE_correltation_count_reset) begin
+        I_Phase_correlation_count <= 16'd0;
+        Q_PHASE_correltation_sum <= Q_Phase_correlation_count;
+    end else if (PHASE_correlation) begin
+        I_Phase_correlation_count <= I_Phase_correlation_count+1;
+    end
+    if (Q_PHASE_correltation_count_reset) begin
+        Q_Phase_correlation_count <= 16'd0;
+        I_PHASE_correltation_sum <= I_Phase_correlation_count;
+    end else if (!PHASE_correlation) begin
+        Q_Phase_correlation_count <= Q_Phase_correlation_count+1;
+    end
+
+    IQ_phase_sum <= I_PHASE_correltation_sum + Q_PHASE_correltation_sum;
+end
+
+
+
+
+
 always @ (posedge clk_312_50_PS) begin
     sync_master_count_sample_A <= master_count_sample;
     sync_master_count_sample_B <= sync_master_count_sample_A;
@@ -149,6 +206,9 @@ always @ (posedge clk_312_50_PS) begin
             count_diff <= (slave_count - sync_master_count_sample_Y); //_SRAI (ORIG)
     end
 end
+
+
+
 
 always @ (posedge clk_312_50_PS) begin
         if (ACCUM_reset ) begin
@@ -213,16 +273,16 @@ end
 
 assign ALL_MMCM_PLL_locked = (master_mmcm_locked & MMCM_locked);
 
-assign ila_input_C = {DBG_PS_DELTA_CHANGE, dbg_calc_Start, MMCM_psincdec, ALL_MMCM_PLL_locked, dbg_mst_samp, wait_for_ps_done, MMCM_psen_pulse, MMCM_psdone}; 
+assign ila_input_C = {DBG_PS_DELTA_CHANGE, PHASE_correlation, MMCM_psincdec, ALL_MMCM_PLL_locked, dbg_mst_samp, wait_for_ps_done, MMCM_psen_pulse, MMCM_psdone}; 
 
 MMCM_status_ILA U_MMCM_status_ILA (
     .clk(clk_312_50_PS),
-    .probe0(accum),
+    .probe0({accum[15:0], IQ_phase_sum}),
     .probe1(PS_DELTA),
     .probe2(ila_input_C),
     .probe3(i1_VOLTAGE),
     .probe4(step_count),
-    .probe5(sync_master_count_sample_Y)
+    .probe5({I_Phase_correlation_count, Q_Phase_correlation_count})
 );
 
 vio_PS_CTRL U_vio_PS_CTRL (
